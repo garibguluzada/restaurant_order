@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders - Restaurant Menu</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="js/auth.js"></script>
+    <style>
+        .orders-container {
+            padding: 100px 20px 50px;
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #1b1b1b;
+            min-height: 100vh;
+        }
+
+        .orders-container h2 {
+            color: gold;
+            text-align: center;
+            font-size: 40px;
+            text-shadow: 4px 2px #a757a7;
+            margin-bottom: 40px;
+        }
+
+        .orders-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .order-card {
+            background-color: #00000075;
+            border-radius: 15px;
+            padding: 20px;
+            color: beige;
+            box-shadow: 37px 25px 24px -21px rgb(0 0 0 / 52%);
+        }
+
+        .order-card h3 {
+            color: gold;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .order-details {
+            margin-bottom: 15px;
+        }
+
+        .order-details p {
+            margin: 8px 0;
+            font-size: 16px;
+        }
+
+        .order-status {
+            margin-top: 15px;
+        }
+
+        .order-status select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 5px;
+            background-color: #1b1b1b;
+            color: beige;
+            border: 1px solid gold;
+            cursor: pointer;
+        }
+
+        .order-status select:focus {
+            outline: none;
+            border-color: #ffd700;
+        }
+
+        .order-status select:disabled {
+            background-color: #2a2a2a;
+            border-color: #666;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        .order-date {
+            color: #888;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .no-orders {
+            text-align: center;
+            color: gold;
+            font-size: 24px;
+            padding: 40px;
+            background-color: #00000075;
+            border-radius: 15px;
+            margin: 20px;
+            box-shadow: 37px 25px 24px -21px rgb(0 0 0 / 52%);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav id="navbar">
+                <div class="logo">
+                    <i class="fa-solid fa-a" style="color: #fff"></i>
+                    <a href="index.html">URORA</a>
+                </div>
+                <div id="rightSide">
+                    <ul id="navLinks">
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="checkout.html">Checkout</a></li>
+                        <li><a href="my_orders.html">My Orders</a></li>
+                        <li><a href="about.html">About us</a></li>
+                        <li><a href="panel.html">Staff Panel</a></li>
+                    </ul>
+                    <i class="fa-solid fa-bars" id="menuToggle"></i>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <div class="orders-container">
+        <h2>My Orders</h2>
+        <div class="orders-grid" id="ordersGrid">
+            <!-- Orders will be dynamically added here -->
+        </div>
+    </div>
+
+    <script>
+        // Cache for table numbers
+        let tableNumbersCache = null;
+
+        // Function to fetch and cache table numbers
+        async function fetchTableNumbers() {
+            if (tableNumbersCache) {
+                return tableNumbersCache;
+            }
+
+            try {
+                const response = await fetch('http://localhost:8080/api/tables');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch table numbers');
+                }
+                const tables = await response.json();
+                tableNumbersCache = tables.reduce((acc, table) => {
+                    acc[table.tableid] = table.tablenum;
+                    return acc;
+                }, {});
+                return tableNumbersCache;
+            } catch (error) {
+                console.error('Error fetching table numbers:', error);
+                return {};
+            }
+        }
+
+        // Function to get table number from ID
+        async function getTableNumber(tableId) {
+            if (!tableNumbersCache) {
+                await fetchTableNumbers();
+            }
+            return tableNumbersCache[tableId] || tableId;
+        }
+
+        // Function to format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleString();
+        }
+
+        // Function to create order card
+        async function createOrderCard(order) {
+            // Clean up the status value in case it's stringified
+            let status = order.status;
+            if (typeof status === 'string' && status.startsWith('"')) {
+                try {
+                    status = JSON.parse(status);
+                } catch (e) {
+                    console.error('Error parsing status:', e);
+                }
+            }
+
+            const isCashOut = status === 'Cash-Out';
+            const tableNumber = await getTableNumber(order.tableid);
+
+            return `
+                <div class="order-card" data-order-id="${order.orderid}">
+                    <h3>Order #${order.orderid}</h3>
+                    <div class="order-details">
+                        <p><strong>Table Number:</strong> ${tableNumber}</p>
+                        <p><strong>Meals:</strong> ${order.mealname}</p>
+                        <p><strong>Total Cost:</strong> $${order.totalcost.toFixed(2)}</p>
+                        <p class="order-date"><strong>Created:</strong> ${formatDate(order.createdat)}</p>
+                        <p><strong>Status:</strong> ${status}</p>
+                    </div>
+                    <div class="order-status">
+                        ${status === 'Cash-Out' ? `
+                            <select disabled>
+                                <option value="Cash-Out" selected>Cash-Out</option>
+                            </select>
+                        ` : status === 'Delivered' ? `
+                            <select onchange="updateOrderStatus(${order.orderid}, this.value)">
+                                <option value="${status}" selected disabled>${status}</option>
+                                <option value="Cash-Out">Cash-Out</option>
+                            </select>
+                        ` : `
+                            <select disabled>
+                                <option value="${status}" selected>${status}</option>
+                            </select>
+                        `}
+                    </div>
+                </div>
+            `;
+        }   
+
+        // Function to fetch and display orders
+        async function fetchOrders() {
+            try {
+                // Get JWT from localStorage
+                const jwt = localStorage.getItem('jwt');
+                if (!jwt) {
+                    document.querySelector('.orders-container').innerHTML = `
+                        <div style="text-align: center; padding: 50px; color: gold; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%;">
+                            <h2>401 Unauthorized</h2>
+                            <p>Please login to access orders.</p>
+                            <a href="index.html" style="color: gold; text-decoration: underline;">Go to Login</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Parse JWT to get table ID
+                let tableId;
+                try {
+                    const payload = JSON.parse(atob(jwt.split('.')[1]));
+                    tableId = payload.id;
+                } catch (e) {
+                    console.error('Invalid JWT token:', e);
+                    document.querySelector('.orders-container').innerHTML = `
+                        <div style="text-align: center; padding: 50px; color: gold; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%;">
+                            <h2>401 Unauthorized</h2>
+                            <p>Invalid session. Please login again.</p>
+                            <a href="index.html" style="color: gold; text-decoration: underline;">Go to Login</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Fetch table numbers first if not cached
+                if (!tableNumbersCache) {
+                    await fetchTableNumbers();
+                }
+
+                const response = await fetch('http://localhost:8080/order', {
+                    headers: {
+                        'Authorization': `Bearer ${jwt}`
+                    }
+                });
+
+                if (response.status === 401) {
+                    document.querySelector('.orders-container').innerHTML = `
+                        <div style="text-align: center; padding: 50px; color: gold; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%;">
+                            <h2>401 Unauthorized</h2>
+                            <p>Your session has expired. Please login again.</p>
+                            <a href="index.html" style="color: gold; text-decoration: underline;">Go to Login</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch orders');
+                }
+
+                const orders = await response.json();
+                
+                // Filter orders to show only those matching the table ID and not in Finished status
+                const filteredOrders = orders.filter(order => {
+                    let status = order.status;
+                    if (typeof status === 'string' && status.startsWith('"')) {
+                        try {
+                            status = JSON.parse(status);
+                        } catch (e) {
+                            console.error('Error parsing status:', e);
+                        }
+                    }
+                    return order.tableid === tableId && status !== 'Finished';
+                });
+                
+                const ordersGrid = document.getElementById('ordersGrid');
+                if (filteredOrders.length === 0) {
+                    ordersGrid.innerHTML = '<div class="no-orders">No orders found</div>';
+                    return;
+                }
+
+                // Create order cards asynchronously
+                const orderCards = await Promise.all(filteredOrders.map(order => createOrderCard(order)));
+                ordersGrid.innerHTML = orderCards.join('');
+            } catch (error) {
+                console.error('Error fetching orders:', error);
+                document.getElementById('ordersGrid').innerHTML = `
+                    <div class="no-orders">
+                        Failed to load orders. Please try again later.
+                        <br><br>
+                        <button onclick="fetchOrders()" class="continue-shopping">Retry</button>
+                    </div>
+                `;
+            }
+        }
+
+        // Function to update order status
+        async function updateOrderStatus(orderId, newStatus) {
+            try {
+                const jwt = localStorage.getItem('jwt');
+                if (!jwt) {
+                    alert('Please login first!');
+                    return;
+                }
+
+                const response = await fetch(`http://localhost:8080/order/${orderId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'text/plain',
+                        'Authorization': `Bearer ${jwt}`
+                    },
+                    body: newStatus
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to update order status');
+                }
+
+                // If status is Cash-Out, handle logout
+                if (newStatus === 'Cash-Out') {
+                    try {
+                        // Call backend logout endpoint
+                        const logoutResponse = await fetch('http://localhost:8080/api/client/cashout', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${jwt}`
+                            },
+                            credentials: 'include'
+                        });
+
+                        if (!logoutResponse.ok) {
+                            throw new Error('Cash-out failed');
+                        }
+
+                        // Clear local storage
+                        localStorage.removeItem('jwt');
+                        
+                        // Show success message and redirect
+                        alert('Order cashed out. You have been logged out.');
+                        window.location.href = 'index.html';
+                        return;
+                    } catch (error) {
+                        console.error('Cash-out error:', error);
+                        alert('Failed to complete cash-out. Please try again.');
+                    }
+                }
+
+                // Refresh orders after successful update
+                fetchOrders();
+            } catch (error) {
+                console.error('Error updating order status:', error);
+                alert('Failed to update order status. Please try again.');
+            }
+        }
+
+        // Initial load of orders
+        fetchOrders();
+    </script>
+</body>
+</html> 

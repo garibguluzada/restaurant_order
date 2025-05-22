@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - Restaurant Menu</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/checkout.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="js/auth.js"></script>
+</head>
+<body>
+    <!-- Add notification popup -->
+    <div id="notification" class="notification">
+        <span id="notification-message"></span>
+    </div>
+
+    <header>
+        <div class="container">
+            <nav id="navbar">
+                <div class="logo">
+                    <i class="fa-solid fa-a" style="color: #fff"></i>
+                    <a href="index.html">URORA</a>
+                </div>
+                <div id="rightSide">
+                    <ul id="navLinks">
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="checkout.html">Checkout</a></li>
+                        <li><a href="my_orders.html">My Orders</a></li>
+                        <li><a href="about.html">About us</a></li>
+                        <li><a href="panel.html">Staff Panel</a></li>
+                    </ul>
+                    <i class="fa-solid fa-bars" id="menuToggle"></i>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <div class="checkout-container">
+        <div class="cart-items">
+            <h2>Your Cart</h2>
+            <div id="cart-items-container">
+                <!-- Cart items will be dynamically added here -->
+            </div>
+            <div id="empty-cart" class="empty-cart" style="display: none;">
+                <h2>Your cart is empty</h2>
+                <p>Looks like you haven't added any items to your cart yet.</p>
+                <a href="index.html#menu" class="continue-shopping">Continue Shopping</a>
+            </div>
+        </div>
+
+        <div class="cart-summary">
+            <h2>Order Summary</h2>
+            <div class="summary-item">
+                <span>Subtotal</span>
+                <span id="subtotal">$0.00</span>
+            </div>
+            <div class="summary-item">
+                <span>Tip (10%)</span>
+                <span id="tax">$0.00</span>
+            </div>
+            <div class="total">
+                <span>Total</span>
+                <span id="total">$0.00</span>
+            </div>
+            <button class="checkout-btn" id="checkout-btn">Proceed to Checkout</button>
+        </div>
+    </div>
+
+    <script>
+        // Check authentication before loading checkout
+        if (!checkAuth()) {
+            document.querySelector('.checkout-container').innerHTML = `
+                <div class="unauthorized-message" style="text-align: center; padding: 50px; color: gold; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%;">
+                    <h2>401 Unauthorized</h2>
+                    <p>Please login to access checkout.</p>
+                    <a href="login.html" style="color: gold; text-decoration: underline;">Go to Login</a>
+                </div>
+            `;
+        } else {
+            // Get cart from localStorage
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+            // Function to update cart display
+            function updateCartDisplay() {
+                const cartContainer = document.getElementById('cart-items-container');
+                const emptyCart = document.getElementById('empty-cart');
+                
+                if (cart.length === 0) {
+                    cartContainer.style.display = 'none';
+                    emptyCart.style.display = 'block';
+                    return;
+                }
+
+                cartContainer.style.display = 'block';
+                emptyCart.style.display = 'none';
+                
+                cartContainer.innerHTML = cart.map((item, index) => `
+                    <div class="cart-item">
+                        <div class="item-details">
+                            <h3>${item.main.name}</h3>
+                            <p>Main Item: $${item.main.price.toFixed(2)}</p>
+                            <div class="quantity-controls">
+                                <button class="quantity-btn" onclick="updateItemQuantity(${index}, -1)">-</button>
+                                <span class="quantity">${item.quantity}</span>
+                                <button class="quantity-btn" onclick="updateItemQuantity(${index}, 1)">+</button>
+                            </div>
+                            ${item.additional.length > 0 ? `
+                                <div class="additional-items">
+                                    <p>Additional Items:</p>
+                                    <ul>
+                                        ${item.additional.map((add, addIndex) => `
+                                            <li>
+                                                ${add.name} (+$${add.price.toFixed(2)})
+                                                <button class="remove-additional-btn" onclick="removeAdditionalItem(${index}, ${addIndex})">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </li>
+                                        `).join('')}
+                                    </ul>
+                                </div>
+                            ` : ''}
+                            <div class="item-total">Total: $${item.totalPrice.toFixed(2)}</div>
+                        </div>
+                        <button class="remove-btn" onclick="removeItem(${index})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `).join('');
+
+                updateSummary();
+            }
+
+            // Function to update item quantity
+            function updateItemQuantity(index, change) {
+                const item = cart[index];
+                item.quantity = Math.max(1, item.quantity + change);
+                
+                // Recalculate total price for the item
+                const additionalTotal = item.additional.reduce((sum, add) => sum + add.price, 0);
+                item.totalPrice = (item.main.price + additionalTotal) * item.quantity;
+                
+                localStorage.setItem('cart', JSON.stringify(cart));
+                updateCartDisplay();
+            }
+
+            // Function to remove additional item from a cart item
+            function removeAdditionalItem(itemIndex, additionalIndex) {
+                const item = cart[itemIndex];
+                item.additional.splice(additionalIndex, 1);
+                
+                // Recalculate total price for the item
+                const additionalTotal = item.additional.reduce((sum, add) => sum + add.price, 0);
+                item.totalPrice = item.main.price + additionalTotal;
+                
+                localStorage.setItem('cart', JSON.stringify(cart));
+                updateCartDisplay();
+            }
+
+            // Function to remove item from cart
+            function removeItem(index) {
+                cart.splice(index, 1);
+                localStorage.setItem('cart', JSON.stringify(cart));
+                updateCartDisplay();
+                updateSummary();
+            }
+
+            // Function to update summary
+            function updateSummary() {
+                const subtotal = cart.reduce((sum, item) => sum + item.totalPrice, 0);
+                const tip = subtotal * 0.1;
+                const total = subtotal + tip;
+
+                document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
+                document.getElementById('tax').textContent = `$${tip.toFixed(2)}`;
+                document.getElementById('total').textContent = `$${total.toFixed(2)}`;
+            }
+
+            // Initialize cart display
+            updateCartDisplay();
+
+            // Add event listener for checkout button
+            document.getElementById('checkout-btn').addEventListener('click', async function() {
+                if (cart.length === 0) {
+                    alert('Your cart is empty!');
+                    return;
+                }
+
+                try {
+                    // Get JWT from localStorage
+                    const jwt = localStorage.getItem('jwt');
+                    if (!jwt) {
+                        alert('Please login first!');
+                        return;
+                    }
+
+                    // Parse JWT to get table ID
+                    const payload = JSON.parse(atob(jwt.split('.')[1]));
+                    const tableId = payload.id;
+
+                    // Calculate total cost
+                    const totalCost = cart.reduce((sum, item) => sum + item.totalPrice, 0);
+
+                    // Create meal names string
+                    const mealNames = cart.map(item => {
+                        const mainName = `${item.quantity}x ${item.main.name}`;
+                        const additionalNames = item.additional.map(add => add.name).join(', ');
+                        return additionalNames ? `${mainName} with ${additionalNames}` : mainName;
+                    }).join('; ');
+
+                    // Prepare order data
+                    const orderData = {
+                        tableid: tableId,
+                        status: "Pending",
+                        totalcost: totalCost,
+                        mealname: mealNames
+                    };
+
+                    // Send order to server
+                    const response = await fetch('http://localhost:8080/order', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(orderData)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to place order');
+                    }
+
+                    // Clear cart after successful order
+                    localStorage.removeItem('cart');
+                    cart = [];
+                    updateCartDisplay();
+
+                    // Show success message
+                    alert('Order placed successfully!');
+                    window.location.href = 'index.html';
+
+                } catch (error) {
+                    console.error('Error placing order:', error);
+                    alert('Failed to place order. Please try again.');
+                }
+            });
+        }
+    </script>
+</body>
+</html> 

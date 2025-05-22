@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Panel - Restaurant Menu</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            background-color: #1b1b1b;
+        }
+
+        .panel-container {
+            padding: 100px 20px 50px;
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #1b1b1b;
+            min-height: 100vh;
+
+        }
+
+        .panel-container h2 {
+            color: gold;
+            text-align: center;
+            font-size: 40px;
+            text-shadow: 4px 2px #a757a7;
+            margin-bottom: 40px;
+        }
+
+        .orders-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .order-card {
+            background-color: #00000075;
+            border-radius: 15px;
+            padding: 20px;
+            color: beige;
+            box-shadow: 37px 25px 24px -21px rgb(0 0 0 / 52%);
+        }
+
+        .order-card h3 {
+            color: gold;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .order-details {
+            margin-bottom: 15px;
+        }
+
+        .order-details p {
+            margin: 8px 0;
+            font-size: 16px;
+        }
+
+        .order-status {
+            margin-top: 15px;
+        }
+
+        .order-status select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 5px;
+            background-color: #1b1b1b;
+            color: beige;
+            border: 1px solid gold;
+            cursor: pointer;
+        }
+
+        .order-status select:focus {
+            outline: none;
+            border-color: #ffd700;
+        }
+
+        .order-date {
+            color: #888;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .unauthorized-message {
+            text-align: center;
+            color: gold;
+            font-size: 24px;
+            padding: 40px;
+            background-color: #00000075;
+            border-radius: 15px;
+            margin: 20px;
+            box-shadow: 37px 25px 24px -21px rgb(0 0 0 / 52%);
+        }
+
+        .notification-badge {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #ff4444;
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .notification-panel {
+            position: fixed;
+            top: 60px;
+            right: 20px;
+            background-color: #00000075;
+            border-radius: 10px;
+            padding: 15px;
+            width: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+            z-index: 999;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+        }
+
+        .notification-header h3 {
+            color: gold;
+            margin: 0;
+        }
+
+        .close-notifications {
+            background: none;
+            border: none;
+            color: gold;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.3s;
+        }
+
+        .close-notifications:hover {
+            background-color: rgba(255, 215, 0, 0.1);
+        }
+
+        .notification-item {
+            background-color: #1b1b1b;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            color: white;
+            border-left: 4px solid gold;
+        }
+
+        .notification-item h4 {
+            margin: 0 0 5px 0;
+            color: gold;
+        }
+
+        .notification-item p {
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .notification-item .time {
+            color: #888;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .notification-item .view-btn {
+            background-color: gold;
+            color: black;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-top: 5px;
+            font-size: 12px;
+        }
+
+        .notification-item .view-btn:hover {
+            background-color: #ffd700;
+        }
+
+        .logout-btn {
+            background: none;
+            border: 1px solid gold;
+            color: gold;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background-color: rgba(255, 215, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div id="navbar">
+            <div class="logo">
+                <a href="index.html">Restaurant Menu</a>
+            </div>
+            <div id="rightSide">
+                <ul id="navLinks">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="index.html#menu">Menu</a></li>
+                    <li><a href="about.html">About Us</a></li>
+                    <li><button id="logoutBtn" class="logout-btn">Logout</button></li>
+                </ul>
+            </div>
+        </div>
+    </header>
+
+    <div class="notification-badge" id="notificationBadge" style="display: none;">0</div>
+    <div class="notification-panel" id="notificationPanel">
+        <div class="notification-header">
+            <h3>Notifications</h3>
+            <div class="notification-actions">
+                <button class="clear-notifications" onclick="clearAllNotifications()">Clear All</button>
+                <button class="close-notifications" onclick="closeNotificationPanel()">×</button>
+            </div>
+        </div>
+        <div id="notificationList"></div>
+    </div>
+
+    <div class="panel-container">
+        <h2 id="panelTitle">Loading...</h2>
+        <div class="orders-grid" id="ordersGrid">
+            <!-- Orders will be dynamically added here -->
+        </div>
+    </div>
+
+    <script>
+        // Redirect to login.html if not authorized
+        (function checkAuthorization() {
+            const jwt = localStorage.getItem('jwt');
+            if (!jwt) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            try {
+                const payload = JSON.parse(atob(jwt.split('.')[1]));
+                const allowedRoles = ['Kitchen', 'Waiter', 'Manager'];
+                const isExpired = payload.exp * 1000 < Date.now();
+                if (!allowedRoles.includes(payload.role) || isExpired) {
+                    window.location.href = 'login.html';
+                }
+            } catch (e) {
+                console.error('Invalid JWT:', e);
+                window.location.href = 'login.html';
+            }
+        })();
+
+        // Function to format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleString();
+        }
+
+        // Function to check if user is authorized
+        function isAuthorized() {
+            const jwt = localStorage.getItem('jwt');
+            if (!jwt) return false;
+
+            try {
+                const payload = JSON.parse(atob(jwt.split('.')[1]));
+                return payload.role === 'Kitchen' || payload.role === 'Waiter' || payload.role === 'Manager';
+            } catch (e) {
+                console.error('Error parsing JWT:', e);
+                return false;
+            }
+        }
+
+        // Function to get user role
+        function getUserRole() {
+            const jwt = localStorage.getItem('jwt');
+            if (!jwt) return null;
+
+            try {
+                const payload = JSON.parse(atob(jwt.split('.')[1]));
+                return payload.role;
+            } catch (e) {
+                console.error('Error parsing JWT:', e);
+                return null;
+            }
+        }
+
+        // Function to update panel title
+        function updatePanelTitle() {
+            const role = getUserRole();
+            if (role) {
+                document.getElementById('panelTitle').textContent = `${role} Orders`;
+            }
+        }
+
+        // Cache for table numbers
+        let tableNumbersCache = null;
+
+        // Function to fetch and cache table numbers
+        async function fetchTableNumbers() {
+            if (tableNumbersCache) {
+                return tableNumbersCache;
+            }
+
+            try {
+                const response = await fetch('http://localhost:8080/api/tables');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch table numbers');
+                }
+                const tables = await response.json();
+                tableNumbersCache = tables.reduce((acc, table) => {
+                    acc[table.tableid] = table.tablenum;
+                    return acc;
+                }, {});
+                return tableNumbersCache;
+            } catch (error) {
+                console.error('Error fetching table numbers:', error);
+                return {};
+            }
+        }
+
+        // Function to get table number from ID
+        function getTableNumber(tableId) {
+            return tableNumbersCache[tableId] || tableId;
+        }
+
+        // Function to create order card
+        function createOrderCard(order) {
+            // Clean up the status value in case it's stringified
+            let status = order.status;
+            if (typeof status === 'string' && status.startsWith('"')) {
+                try {
+                    status = JSON.parse(status);
+                } catch (e) {
+                    console.error('Error parsing status:', e);
+                }
+            }
+
+            const userRole = getUserRole();
+            const tableNumber = getTableNumber(order.tableid);
+
+            // For Manager role, show all orders without filtering
+            if (userRole === 'Manager') {
+                return `
+                    <div class="order-card" data-order-id="${order.orderid}">
+                        <h3>Order #${order.orderid}</h3>
+                        <div class="order-details">
+                            <p><strong>Table Number:</strong> ${tableNumber}</p>
+                            <p><strong>Meals:</strong> ${order.mealname}</p>
+                            <p><strong>Total Cost:</strong> $${order.totalcost.toFixed(2)}</p>
+                            <p class="order-date"><strong>Created:</strong> ${formatDate(order.createdat)}</p>
+                            <p><strong>Status:</strong> ${status}</p>
+                        </div>
+                        <div class="order-status">
+                            <select disabled>
+                                <option value="${status}" selected>${status}</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Filter orders based on role for Kitchen and Waiter
+            if (userRole === 'Kitchen') {
+                if (status !== 'Pending' && status !== 'In Preparation') {
+                    return '';
+                }
+            } else if (userRole === 'Waiter') {
+                if (status !== 'Ready' && status !== 'Cash-Out') {
+                    return '';
+                }
+            }
+
+            return `
+                <div class="order-card" data-order-id="${order.orderid}">
+                    <h3>Order #${order.orderid}</h3>
+                    <div class="order-details">
+                        <p><strong>Table Number:</strong> ${tableNumber}</p>
+                        <p><strong>Meals:</strong> ${order.mealname}</p>
+                        <p><strong>Total Cost:</strong> $${order.totalcost.toFixed(2)}</p>
+                        <p class="order-date"><strong>Created:</strong> ${formatDate(order.createdat)}</p>
+                        <p><strong>Status:</strong> ${status}</p>
+                    </div>
+                    <div class="order-status">
+                        <select onchange="updateOrderStatus(${order.orderid}, this.value)">
+                            <option value="${status}" selected disabled>${status}</option>
+                            ${userRole === 'Kitchen' ? `
+                                ${status === 'Pending' ? '<option value="In Preparation">In Preparation</option>' : ''}
+                                ${status === 'In Preparation' ? '<option value="Ready">Ready</option>' : ''}
+                            ` : ''}
+                            ${userRole === 'Waiter' ? `
+                                ${status === 'Ready' ? '<option value="Delivered">Delivered</option>' : ''}
+                                ${status === 'Cash-Out' ? '<option value="Finished">Finished</option>' : ''}
+                            ` : ''}
+                        </select>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Function to fetch and display orders
+        async function fetchOrders() {
+            if (!isAuthorized()) {
+                document.getElementById('ordersGrid').innerHTML = `
+                    <div class="unauthorized-message">
+                        Unauthorized access. Please login as kitchen staff, waiter, or manager.
+                    </div>
+                `;
+                return;
+            }
+
+            // Update the panel title
+            updatePanelTitle();
+
+            try {
+                // Fetch table numbers first if not cached
+                if (!tableNumbersCache) {
+                    await fetchTableNumbers();
+                }
+
+                const jwt = localStorage.getItem('jwt');
+                const response = await fetch('http://localhost:8080/order', {
+                    headers: {
+                        'Authorization': `Bearer ${jwt}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch orders');
+                }
+
+                const orders = await response.json();
+                const ordersGrid = document.getElementById('ordersGrid');
+                
+                // For waiter role, check for new ready orders
+                if (getUserRole() === 'Waiter') {
+                    const readyOrders = orders.filter(order => order.status === 'Ready');
+                    readyOrders.forEach(order => {
+                        // Check if notification already exists for this order
+                        const existingNotification = notifications.find(n => n.id === order.orderid);
+                        if (!existingNotification) {
+                            addNotification(order);
+                        }
+                    });
+                }
+
+                // Create order cards
+                const orderCards = orders.map(order => createOrderCard(order)).filter(card => card !== '');
+                ordersGrid.innerHTML = orderCards.join('');
+            } catch (error) {
+                console.error('Error fetching orders:', error);
+                alert('Failed to load orders. Please try again later.');
+            }
+        }
+
+        // Function to update order status
+        async function updateOrderStatus(orderId, newStatus) {
+            try {
+                const jwt = localStorage.getItem('jwt');
+                if (!jwt) {
+                    alert('Please login first!');
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                const response = await fetch(`http://localhost:8080/order/${orderId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'text/plain',
+                        'Authorization': `Bearer ${jwt}`
+                    },
+                    body: newStatus
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to update order status');
+                }
+
+                // If order is marked as ready, add notification
+                if (newStatus === 'Ready') {
+                    const orders = await fetch('http://localhost:8080/order', {
+                        headers: {
+                            'Authorization': `Bearer ${jwt}`
+                        }
+                    }).then(res => res.json());
+                    
+                    const order = orders.find(o => o.orderid === orderId);
+                    if (order) {
+                        addNotification(order);
+                    }
+                }
+
+                // Refresh orders after successful update
+                fetchOrders();
+            } catch (error) {
+                console.error('Error updating order status:', error);
+                alert('Failed to update order status. Please try again.');
+            }
+        }
+
+        // Function to view order
+        function viewOrder(orderId) {
+            // Only allow Waiter role to view orders from notifications
+            if (getUserRole() !== 'Waiter') {
+                return;
+            }
+
+            // Mark notification as read
+            const notification = notifications.find(n => n.id === orderId);
+            if (notification) {
+                notification.read = true;
+                updateNotificationBadge();
+                updateNotificationPanel();
+                saveNotifications(); // Save to localStorage
+            }
+            
+            // Scroll to the order in the panel
+            const orderElement = document.querySelector(`[data-order-id="${orderId}"]`);
+            if (orderElement) {
+                orderElement.scrollIntoView({ behavior: 'smooth' });
+                orderElement.style.animation = 'highlight 2s';
+            }
+        }
+
+        // Function to close notification panel
+        function closeNotificationPanel() {
+            notificationPanel.style.display = 'none';
+        }
+
+        // Add click outside listener
+        document.addEventListener('click', function(event) {
+            const isClickInsidePanel = notificationPanel.contains(event.target);
+            const isClickOnBadge = notificationBadge.contains(event.target);
+            
+            if (!isClickInsidePanel && !isClickOnBadge && notificationPanel.style.display === 'block') {
+                closeNotificationPanel();
+            }
+        });
+
+        // Prevent panel from closing when clicking inside it
+        notificationPanel.addEventListener('click', function(event) {
+            event.stopPropagation();
+        });
+
+        // Toggle notification panel
+        notificationBadge.addEventListener('click', (event) => {
+            // Only allow Waiter role to toggle panel
+            if (getUserRole() !== 'Waiter') {
+                return;
+            }
+            event.stopPropagation();
+            notificationPanel.style.display = notificationPanel.style.display === 'none' ? 'block' : 'none';
+        });
+
+        // Add CSS for read notifications
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes highlight {
+                0% { background-color: gold; }
+                100% { background-color: transparent; }
+            }
+            .notification-item.read {
+                opacity: 0.7;
+                border-left: 4px solid #666;
+            }
+            .notification-item.read h4 {
+                color: #666;
+            }
+            .notification-actions {
+                display: flex;
+                gap: 10px;
+                align-items: center;
+            }
+            .clear-notifications {
+                background: none;
+                border: 1px solid gold;
+                color: gold;
+                padding: 5px 10px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 12px;
+                transition: all 0.3s;
+            }
+            .clear-notifications:hover {
+                background-color: rgba(255, 215, 0, 0.1);
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Function to clear all notifications
+        function clearAllNotifications() {
+            notifications = [];
+            saveNotifications();
+            updateNotificationBadge();
+            updateNotificationPanel();
+        }
+
+        // Add logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', async function() {
+            try {
+                const jwt = localStorage.getItem('jwt');
+                if (!jwt) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                // Call backend logout endpoint
+                const response = await fetch('http://localhost:8080/api/auth/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${jwt}`
+                    },
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Logout failed');
+                }
+
+                // Clear local storage
+                localStorage.removeItem('jwt');
+                localStorage.removeItem('notifications');
+
+                // Redirect to login page
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Logout error:', error);
+                alert('Failed to logout. Please try again.');
+            }
+        });
+
+        // Initial load of orders
+        fetchOrders();
+
+        // Initialize notifications from localStorage or empty array
+        let notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+
+        // Function to save notifications to localStorage
+        function saveNotifications() {
+            localStorage.setItem('notifications', JSON.stringify(notifications));
+        }
+
+        // Function to add a new notification
+        function addNotification(order) {
+            // Only add notifications for Waiter role
+            if (getUserRole() !== 'Waiter') {
+                return;
+            }
+
+            const notification = {
+                id: order.orderid,
+                tableId: order.tableid,
+                mealName: order.mealname,
+                time: new Date().toLocaleTimeString(),
+                read: false
+            };
+            
+            // Add new notification at the beginning
+            notifications.unshift(notification);
+            
+            // Keep only the most recent 20 notifications
+            if (notifications.length > 20) {
+                notifications = notifications.slice(0, 20);
+            }
+            
+            updateNotificationBadge();
+            updateNotificationPanel();
+            saveNotifications(); // Save to localStorage
+            
+            // Show notification badge
+            notificationBadge.style.display = 'flex';
+            
+            // Play notification sound
+            const audio = new Audio('assets/notification.mp3');
+            audio.play().catch(e => console.log('Audio play failed:', e));
+        }
+
+        // Function to update notification badge
+        function updateNotificationBadge() {
+            // Only show badge for Waiter role
+            if (getUserRole() !== 'Waiter') {
+                notificationBadge.style.display = 'none';
+                return;
+            }
+
+            const unreadCount = notifications.filter(n => !n.read).length;
+            notificationBadge.textContent = unreadCount;
+            notificationBadge.style.display = unreadCount > 0 ? 'flex' : 'none';
+        }
+
+        // Function to update notification panel
+        function updateNotificationPanel() {
+            // Only show panel for Waiter role
+            if (getUserRole() !== 'Waiter') {
+                notificationPanel.style.display = 'none';
+                return;
+            }
+
+            notificationList.innerHTML = notifications.map(notification => `
+                <div class="notification-item ${notification.read ? 'read' : ''}">
+                    <h4>Order Ready for Table ${notification.tableId}</h4>
+                    <p>${notification.mealName}</p>
+                    <div class="time">${notification.time}</div>
+                    <button class="view-btn" onclick="viewOrder(${notification.id})">View Order</button>
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+
+</html>

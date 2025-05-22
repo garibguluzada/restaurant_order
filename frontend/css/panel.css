@@ -1,0 +1,175 @@
+.panel-container {
+    padding-top: 66px;
+    min-height: 100vh;
+    background-color: #1b1b1b;
+    color: white;
+}
+
+.panel-header {
+    background-color: #00000075;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.welcome-message {
+    text-align: center;
+    color: gold;
+    font-size: 2.5em;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.user-info {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: gold;
+    font-size: 1.2em;
+}
+
+.user-info i {
+    font-size: 1.4em;
+}
+
+.orders-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.order-card {
+    background-color: #00000075;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.order-card:hover {
+    transform: translateY(-5px);
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #333;
+}
+
+.order-number {
+    color: gold;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.order-status {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.9em;
+    font-weight: bold;
+}
+
+.status-pending {
+    background-color: #ffd700;
+    color: black;
+}
+
+.status-preparing {
+    background-color: #ff9800;
+    color: white;
+}
+
+.status-ready {
+    background-color: #4caf50;
+    color: white;
+}
+
+.order-items {
+    margin: 15px 0;
+}
+
+.order-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding: 5px 0;
+    border-bottom: 1px dashed #333;
+}
+
+.order-item:last-child {
+    border-bottom: none;
+}
+
+.item-quantity {
+    color: gold;
+    font-weight: bold;
+}
+
+.order-total {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 2px solid #333;
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    color: gold;
+}
+
+.order-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.action-btn {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.accept-btn {
+    background-color: #4caf50;
+    color: white;
+}
+
+.accept-btn:hover {
+    background-color: #45a049;
+}
+
+.complete-btn {
+    background-color: gold;
+    color: black;
+}
+
+.complete-btn:hover {
+    background-color: #ffd700;
+}
+
+.cancel-btn {
+    background-color: #f44336;
+    color: white;
+}
+
+.cancel-btn:hover {
+    background-color: #da190b;
+}
+
+.order-time {
+    color: #888;
+    font-size: 0.9em;
+    margin-top: 10px;
+    text-align: right;
+} 
